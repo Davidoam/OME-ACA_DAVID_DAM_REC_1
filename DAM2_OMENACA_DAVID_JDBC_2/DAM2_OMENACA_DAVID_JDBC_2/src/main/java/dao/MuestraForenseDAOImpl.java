@@ -74,16 +74,18 @@ public class MuestraForenseDAOImpl extends AbstractDAO<MuestraForense> {
         }
 
         if (muestraForense.getEstadoCustodia() != null) {
-            campos.put("coste", muestraForense.getEstadoCustodia());
+            campos.put("estado", muestraForense.getEstadoCustodia());
         }
 
-        campos.put("activo", satelite.isActivo());
-
-        if (muestraForense.getAgencia() != null) {
-            campos.put("agencia_id", satelite.getAgencia().getId());
+        if (muestraForense.getCentroForense() != null) {
+            campos.put("centro_id", muestraForense.getCentroForense().getId());
         }
 
-        return dynamicUpdate("satelites", campos, "id", satelite.getId());
+        if (muestraForense.getInforme() != null) {
+            campos.put("informe_id", muestraForense.getInforme().getId());
+        }
+
+        return dynamicUpdate("satelites", campos, "id", muestraForense.getId());
     }
 
     @Override
@@ -100,22 +102,23 @@ public class MuestraForenseDAOImpl extends AbstractDAO<MuestraForense> {
         MuestraForense muestraForense = null;
 
         String sql = """
-                SELECT 
-                    s.id AS satelite_id,
-                    s.nombre AS satelite_nombre,
-                    s.orbita,
-                    s.peso,
-                    s.coste,
-                    s.activo,
-                
-                    a.id AS agencia_id,
-                    a.nombre AS agencia_nombre,
-                    a.pais AS agencia_pais
-                
-                FROM satelites s
-                INNER JOIN agencias a
-                    ON s.agencia_id = a.id
-                WHERE s.id = ?
+                SELECT
+                                                                                        m.id AS muestra_id,
+                                                                                        m.codigo_caso,
+                                                                                        m.tipo_muestra,
+                                                                                        m.fecha_recogida,
+                                                                                        m.estado_custodia,
+                                                                                    
+                                                                                        c.id AS centro_id,
+                                                                                        c.nombre AS agencia_nombre,
+                                                                                        c.pais AS agencia_pais,
+                                                                                        c.nivel_seguridad,
+                                                                                    
+                                                                                    FROM MUESTRAS_FORENSES m
+                                                                                    INNER JOIN CENTROS_FORENSES c
+                                                                                        ON m.centro_id = c.id;
+                                                                  
+                WHERE m.id = ?
                 """;
 
         try {
@@ -127,7 +130,7 @@ public class MuestraForenseDAOImpl extends AbstractDAO<MuestraForense> {
             ResultSet rs = ps.executeQuery();
 
             if (rs.next()) {
-                muestraForense = mapSateliteConAgencia(rs);
+                muestraForense = mapMuestraForenseConCentro(rs);
             }
 
             rs.close();
@@ -149,25 +152,23 @@ public class MuestraForenseDAOImpl extends AbstractDAO<MuestraForense> {
         List<MuestraForense> muestraForenses = new ArrayList<>();
 
         String sql = """
-            SELECT 
-                s.id AS satelite_id,
-                s.nombre AS satelite_nombre,
-                s.orbita,
-                s.peso,
-                s.coste,
-                s.activo,
-                s.fecha_lanzamiento,
-
-                a.id AS agencia_id,
-                a.nombre AS agencia_nombre,
-                a.pais AS agencia_pais,
-                a.fecha_fundacion AS agencia_fecha_fundacion
-
-            FROM satelites s
-            INNER JOIN agencias a
-                ON s.agencia_id = a.id
-            ORDER BY s.id
-            """;
+                SELECT
+                                m.id AS muestra_id,
+                                m.codigo_caso,
+                                m.tipo_muestra,
+                                m.fecha_recogida,
+                                m.estado_custodia,
+                            
+                                c.id AS centro_id,
+                                c.nombre AS agencia_nombre,
+                                c.pais AS agencia_pais,
+                                c.nivel_seguridad,
+                            
+                            FROM MUESTRAS_FORENSES m
+                            INNER JOIN CENTROS_FORENSES c
+                                ON m.centro_id = c.id;
+                ORDER BY m.id
+                """;
 
         try {
             motor.conectar();
@@ -176,7 +177,7 @@ public class MuestraForenseDAOImpl extends AbstractDAO<MuestraForense> {
             ResultSet rs = ps.executeQuery();
 
             while (rs.next()) {
-                muestraForenses.add(mapSateliteConAgencia(rs));
+                muestraForenses.add(mapMuestraForenseConCentro(rs));
             }
 
             rs.close();
@@ -197,23 +198,24 @@ public class MuestraForenseDAOImpl extends AbstractDAO<MuestraForense> {
         List<MuestraForense> satelites = new ArrayList<>();
 
         String sql = """
-                SELECT 
-                    s.id AS satelite_id,
-                    s.nombre AS satelite_nombre,
-                    s.orbita,
-                    s.peso,
-                    s.coste,
-                    s.activo,
-                
-                    a.id AS agencia_id,
-                    a.nombre AS agencia_nombre,
-                    a.pais AS agencia_pais
-                
-                FROM satelites s
-                INNER JOIN agencias a
-                    ON s.agencia_id = a.id
-                WHERE a.id = ?
-                ORDER BY s.id
+                SELECT
+                    m.id AS muestra_id,
+                    m.codigo_caso,
+                    m.tipo_muestra,
+                    m.fecha_recogida,
+                    m.estado_custodia,
+                                
+                    c.id AS centro_id,
+                    c.nombre AS agencia_nombre,
+                    c.pais AS agencia_pais,
+                    c.nivel_seguridad,
+                                
+                FROM MUESTRAS_FORENSES m
+                INNER JOIN CENTROS_FORENSES c
+                    ON m.centro_id = c.id;
+                    
+                WHERE c.id = ?
+                ORDER BY m.id
                 """;
 
         try {
@@ -225,7 +227,7 @@ public class MuestraForenseDAOImpl extends AbstractDAO<MuestraForense> {
             ResultSet rs = ps.executeQuery();
 
             while (rs.next()) {
-                satelites.add(mapSateliteConAgencia(rs));
+                satelites.add(mapMuestraForenseConCentro(rs));
             }
 
             rs.close();
@@ -241,34 +243,33 @@ public class MuestraForenseDAOImpl extends AbstractDAO<MuestraForense> {
         return satelites;
     }
 
-    public MuestraForense findWithDetail(int id) {
+    public MuestraForense findWithInforme(int id) {
 
         MuestraForense muestraForense = null;
 
         String sql = """
-                SELECT 
-                    s.id AS satelite_id,
-                    s.nombre AS satelite_nombre,
-                    s.orbita,
-                    s.peso,
-                    s.coste,
-                    s.activo,
-                
-                    a.id AS agencia_id,
-                    a.nombre AS agencia_nombre,
-                    a.pais AS agencia_pais,
-                
-                    d.id AS detalle_id,
-                    d.velocidad_maxima,
-                    d.combustible,
-                    d.vida_util,
-                    d.temperatura_maxima
-                
-                FROM satelites s
-                INNER JOIN agencias a
-                    ON s.agencia_id = a.id
-                INNER JOIN detalle_satelite d
-                    ON d.satelite_id = s.id
+                SELECT
+                                               m.id AS muestra_id,
+                                               m.codigo_caso,
+                                               m.tipo_muestra,
+                                               m.fecha_recogida,
+                                               m.estado_custodia,
+                                           
+                                               c.id AS centro_id,
+                                               c.nombre AS agencia_nombre,
+                                               c.pais AS agencia_pais,
+                                               c.nivel_seguridad,
+                                           
+                                               i.id AS informe_id,
+                                               i.adn_positivo,
+                                               i.nivel_riesgo,
+                                               i.conclusion
+                                           
+                                           FROM MUESTRAS_FORENSES m
+                                           INNER JOIN CENTROS_FORENSES c
+                                               ON m.centro_id = c.id
+                                           INNER JOIN INFORMES_FORENSES i
+                                               ON i.muestra_id = m.id;
                 WHERE s.id = ?
                 """;
 
@@ -281,7 +282,7 @@ public class MuestraForenseDAOImpl extends AbstractDAO<MuestraForense> {
             ResultSet rs = ps.executeQuery();
 
             if (rs.next()) {
-                muestraForense = mapSateliteConAgenciaYDetalle(rs);
+                muestraForense = mapMuestraConCentroYInforme(rs);
             }
 
             rs.close();
@@ -295,61 +296,6 @@ public class MuestraForenseDAOImpl extends AbstractDAO<MuestraForense> {
         }
 
         return muestraForense;
-    }
-
-    public List<MuestraForense> findActivosWithAgenciaAndDetalle() {
-
-        List<MuestraForense> muestraForenses = new ArrayList<>();
-
-        String sql = """
-                SELECT 
-                    s.id AS satelite_id,
-                    s.nombre AS satelite_nombre,
-                    s.orbita,
-                    s.peso,
-                    s.coste,
-                    s.activo,
-                
-                    a.id AS agencia_id,
-                    a.nombre AS agencia_nombre,
-                    a.pais AS agencia_pais,
-                
-                    d.id AS detalle_id,
-                    d.velocidad_maxima,
-                    d.combustible,
-                    d.vida_util,
-                    d.temperatura_maxima
-                
-                FROM satelites s
-                INNER JOIN agencias a
-                    ON s.agencia_id = a.id
-                INNER JOIN detalle_satelite d
-                    ON d.satelite_id = s.id
-                WHERE s.activo = true
-                ORDER BY s.id
-                """;
-
-        try {
-            motor.conectar();
-
-            PreparedStatement ps = motor.getConn().prepareStatement(sql);
-            ResultSet rs = ps.executeQuery();
-
-            while (rs.next()) {
-                muestraForenses.add(mapSateliteConAgenciaYDetalle(rs));
-            }
-
-            rs.close();
-            ps.close();
-
-        } catch (SQLException e) {
-            System.out.println("Error en BONUS_QUERY_ADVANCED.");
-            e.printStackTrace();
-        } finally {
-            motor.desconectar();
-        }
-
-        return muestraForenses;
     }
 
     private MuestraForense mapMuestraForenseConCentro(ResultSet rs) throws SQLException {
@@ -373,17 +319,17 @@ public class MuestraForenseDAOImpl extends AbstractDAO<MuestraForense> {
         return muestraForense;
     }
 
-    private Satelite mapSateliteConAgenciaYDetalle(ResultSet rs) throws SQLException {
+    private MuestraForense mapMuestraConCentroYInforme(ResultSet rs) throws SQLException {
 
-        Satelite satelite = mapSateliteConAgencia(rs);
+        MuestraForense satelite = mapMuestraForenseConCentro(rs);
 
-        DetalleSatelite detalle = new DetalleSatelite();
-        detalle.setId(rs.getInt("detalle_id"));
-        detalle.setVelocidadMaxima(rs.getDouble("velocidad_maxima"));
-        detalle.setCombustible(rs.getString("combustible"));
-        detalle.setVidaUtil(rs.getInt("vida_util"));
+        InformeForense informeForense = new InformeForense();
+        informeForense.setId(rs.getInt("informe_id"));
+        informeForense.setAdnPositivo(rs.getBoolean("adn_positivo?"));
+        informeForense.setNivelRiesgo(rs.getInt("nivel_riesgo"));
+        informeForense.setConclusion(rs.getString("conclusion"));
 
-        satelite.setDetalle(detalle);
+        satelite.setInforme(informeForense);
 
         return satelite;
     }
