@@ -1,7 +1,8 @@
 package dao;
 
-import beans.Agencia;
 import beans.CentroForense;
+import beans.InformeForense;
+import beans.MuestraForense;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -15,61 +16,51 @@ public class CentroForenseDAOImpl extends AbstractDAO<CentroForense> {
     private static final String AUTOR = "OMENACA_AYUSO_DAVID_DAM2";
 
     @Override
-    public int add(Agencia agencia) {
+    public int add(CentroForense centroForense) {
 
         String sql = """
-                INSERT INTO agencias (nombre, pais, fecha_fundacion, autor_examen)
+                INSERT INTO centroForense (nombre, pais, nivel_seguridad, autor_examen)
                 VALUES (?, ?, ?, ?)
                 """;
 
         return executeUpdate(
                 sql,
-                agencia.getNombre(),
-                agencia.getPais(),
+                centroForense.getNombre(),
+                centroForense.getPais(),
                 AUTOR
         );
     }
 
     @Override
-    public int update(Agencia agencia) {
+    public int update(CentroForense centroForense) {
 
         String sql = """
-                UPDATE agencias
+                UPDATE centroForense
                 SET nombre = ?, pais = ?, fecha_fundacion = ?
                 WHERE id = ?
                 """;
 
         return executeUpdate(
                 sql,
-                agencia.getNombre(),
-                agencia.getPais(),
-                agencia.getId()
+                centroForense.getNombre(),
+                centroForense.getPais(),
+                centroForense.getId()
         );
     }
 
-    public int updateDinamico(Agencia agencia) {
+    public int updateDinamico(CentroForense centroForense) {
 
         HashMap<String, Object> campos = new HashMap<>();
 
-        if (agencia.getNombre() != null) {
-            campos.put("nombre", agencia.getNombre());
+        if (centroForense.getNombre() != null) {
+            campos.put("nombre", campos.get(centroForense.getNombre()));
         }
 
-        if (agencia.getPais() != null) {
-            campos.put("pais", agencia.getPais());
+        if (centroForense.getPais() != null) {
+            campos.put("pais", campos.get(centroForense.getPais()));
         }
 
-        return dynamicUpdate("agencias", campos, "id", agencia.getId());
-    }
-
-    @Override
-    public int add(CentroForense bean) {
-        return 0;
-    }
-
-    @Override
-    public int update(CentroForense bean) {
-        return 0;
+        return dynamicUpdate("centro_forense", campos, "id", centroForense.getId());
     }
 
     @Override
@@ -81,13 +72,13 @@ public class CentroForenseDAOImpl extends AbstractDAO<CentroForense> {
     }
 
     @Override
-    public Agencia findById(int id) {
+    public CentroForense findById(int id) {
 
-        Agencia agencia = null;
+        CentroForense centroForense = null;
 
         String sql = """
                 SELECT id, nombre, pais
-                FROM agencias
+                FROM centroForense
                 WHERE id = ?
                 """;
 
@@ -100,7 +91,7 @@ public class CentroForenseDAOImpl extends AbstractDAO<CentroForense> {
             ResultSet rs = ps.executeQuery();
 
             if (rs.next()) {
-                agencia = mapAgencia(rs);
+                centroForense = mapCentroForense(rs);
             }
 
             rs.close();
@@ -113,17 +104,17 @@ public class CentroForenseDAOImpl extends AbstractDAO<CentroForense> {
             motor.desconectar();
         }
 
-        return agencia;
+        return centroForense;
     }
 
     @Override
-    public List<Agencia> findAll() {
+    public List<CentroForense> findAll() {
 
-        List<Agencia> agencias = new ArrayList<>();
+        List<CentroForense> centroForenses = new ArrayList<>();
 
         String sql = """
                 SELECT id, nombre, pais
-                FROM agencias
+                FROM centroForense
                 ORDER BY id
                 """;
 
@@ -134,7 +125,7 @@ public class CentroForenseDAOImpl extends AbstractDAO<CentroForense> {
             ResultSet rs = ps.executeQuery();
 
             while (rs.next()) {
-                agencias.add(mapAgencia(rs));
+                centroForenses.add(mapCentroForense(rs));
             }
 
             rs.close();
@@ -147,17 +138,17 @@ public class CentroForenseDAOImpl extends AbstractDAO<CentroForense> {
             motor.desconectar();
         }
 
-        return agencias;
+        return centroForenses;
     }
 
-    private Agencia mapAgencia(ResultSet rs) throws SQLException {
+    private CentroForense mapCentroForense(ResultSet rs) throws SQLException {
 
-        Agencia agencia = new Agencia();
+        CentroForense centroForense = new CentroForense();
 
-        agencia.setId(rs.getInt("id"));
-        agencia.setNombre(rs.getString("nombre"));
-        agencia.setPais(rs.getString("pais"));
+        centroForense.setId(rs.getInt("id"));
+        centroForense.setNombre(rs.getString("nombre"));
+        centroForense.setPais(rs.getString("pais"));
 
-        return agencia;
+        return centroForense;
     }
 }
