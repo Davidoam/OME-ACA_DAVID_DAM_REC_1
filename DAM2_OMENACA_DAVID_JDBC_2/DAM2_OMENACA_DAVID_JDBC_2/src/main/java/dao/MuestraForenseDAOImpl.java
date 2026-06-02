@@ -1,10 +1,8 @@
 package dao;
 
-
-import beans.Agencia;
-import beans.DetalleSatelite;
+import beans.CentroForense;
+import beans.InformeForense;
 import beans.MuestraForense;
-import beans.Satelite;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -20,70 +18,68 @@ public class MuestraForenseDAOImpl extends AbstractDAO<MuestraForense> {
 
 
     @Override
-    public int add(Satelite satelite) {
+    public int add(MuestraForense muestraForense) {
 
         String sql = """
-                INSERT INTO satelites 
-                (nombre, orbita, peso, coste, activo, agencia_id, autor_examen)
+                INSERT INTO muestraForense 
+                (codigo_caso, tipo_muestra, fecha_recogida, estado_custodia, centro_id, autor_examen)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
                 """;
 
         return executeUpdate(
                 sql,
-                satelite.getNombre(),
-                satelite.getOrbita(),
-                satelite.getPeso(),
-                satelite.getCoste(),
-                satelite.isActivo(),
-                satelite.getAgencia().getId(),
+                muestraForense.getCodigoCaso(),
+                muestraForense.getTipoMuestra(),
+                muestraForense.getFechaRecogida(),
+                muestraForense.getEstadoCustodia(),
+                muestraForense.getCentroForense().getId(),
                 AUTOR
         );
     }
 
     @Override
-    public int update(Satelite satelite) {
+    public int update(MuestraForense muestraForense) {
 
         String sql = """
                 UPDATE satelites
-                SET nombre = ?, orbita = ?, peso = ?, coste = ?, activo = ?, agencia_id = ?
+                SET codigo_caso = ?, tipo_muestra = ?, fecha_recogida = ?, estado_custodia = ?, centro_id = ?
                 WHERE id = ?
                 """;
 
         return executeUpdate(
                 sql,
-                satelite.getNombre(),
-                satelite.getOrbita(),
-                satelite.getPeso(),
-                satelite.getCoste(),
-                satelite.isActivo(),
-                satelite.getAgencia().getId(),
-                satelite.getId()
+                muestraForense.getCodigoCaso(),
+                muestraForense.getTipoMuestra(),
+                muestraForense.getFechaRecogida(),
+                muestraForense.getEstadoCustodia(),
+                muestraForense.getCentroForense().getId(),
+                muestraForense.getId()
         );
     }
 
-    public int updateDinamico(Satelite satelite) {
+    public int updateDinamico(MuestraForense muestraForense) {
 
         HashMap<String, Object> campos = new HashMap<>();
 
-        if (satelite.getNombre() != null) {
-            campos.put("nombre", satelite.getNombre());
+        if (muestraForense.getCodigoCaso() > 0) {
+            campos.put("codigo_caso", muestraForense.getCodigoCaso());
         }
 
-        if (satelite.getOrbita() != null) {
-            campos.put("orbita", satelite.getOrbita());
+        if (muestraForense.getTipoMuestra() != null) {
+            campos.put("tipo_muestra", muestraForense.getTipoMuestra());
         }
 
-        if (satelite.getPeso() > 0) {
-            campos.put("peso", satelite.getPeso());
+        if (muestraForense.getFechaRecogida() > 0) {
+            campos.put("fecha_recogida", muestraForense.getFechaRecogida());
         }
 
-        if (satelite.getCoste() > 0) {
-            campos.put("coste", satelite.getCoste());
+        if (muestraForense.getEstadoCustodia() != null) {
+            campos.put("coste", muestraForense.getEstadoCustodia());
         }
 
         campos.put("activo", satelite.isActivo());
 
-        if (satelite.getAgencia() != null) {
+        if (muestraForense.getAgencia() != null) {
             campos.put("agencia_id", satelite.getAgencia().getId());
         }
 
@@ -99,9 +95,9 @@ public class MuestraForenseDAOImpl extends AbstractDAO<MuestraForense> {
     }
 
     @Override
-    public Satelite findById(int id) {
+    public MuestraForense findById(int id) {
 
-        Satelite satelite = null;
+        MuestraForense muestraForense = null;
 
         String sql = """
                 SELECT 
@@ -131,7 +127,7 @@ public class MuestraForenseDAOImpl extends AbstractDAO<MuestraForense> {
             ResultSet rs = ps.executeQuery();
 
             if (rs.next()) {
-                satelite = mapSateliteConAgencia(rs);
+                muestraForense = mapSateliteConAgencia(rs);
             }
 
             rs.close();
@@ -144,13 +140,13 @@ public class MuestraForenseDAOImpl extends AbstractDAO<MuestraForense> {
             motor.desconectar();
         }
 
-        return satelite;
+        return muestraForense;
     }
 
     @Override
-    public List<Satelite> findAll() {
+    public List<MuestraForense> findAll() {
 
-        List<Satelite> satelites = new ArrayList<>();
+        List<MuestraForense> muestraForenses = new ArrayList<>();
 
         String sql = """
             SELECT 
@@ -180,7 +176,7 @@ public class MuestraForenseDAOImpl extends AbstractDAO<MuestraForense> {
             ResultSet rs = ps.executeQuery();
 
             while (rs.next()) {
-                satelites.add(mapSateliteConAgencia(rs));
+                muestraForenses.add(mapSateliteConAgencia(rs));
             }
 
             rs.close();
@@ -193,12 +189,12 @@ public class MuestraForenseDAOImpl extends AbstractDAO<MuestraForense> {
             motor.desconectar();
         }
 
-        return satelites;
+        return muestraForenses;
     }
 
-    public List<Satelite> findByAgencia(int agenciaId) {
+    public List<MuestraForense> findByAgencia(int agenciaId) {
 
-        List<Satelite> satelites = new ArrayList<>();
+        List<MuestraForense> satelites = new ArrayList<>();
 
         String sql = """
                 SELECT 
@@ -245,9 +241,9 @@ public class MuestraForenseDAOImpl extends AbstractDAO<MuestraForense> {
         return satelites;
     }
 
-    public Satelite findWithDetail(int id) {
+    public MuestraForense findWithDetail(int id) {
 
-        Satelite satelite = null;
+        MuestraForense muestraForense = null;
 
         String sql = """
                 SELECT 
@@ -285,7 +281,7 @@ public class MuestraForenseDAOImpl extends AbstractDAO<MuestraForense> {
             ResultSet rs = ps.executeQuery();
 
             if (rs.next()) {
-                satelite = mapSateliteConAgenciaYDetalle(rs);
+                muestraForense = mapSateliteConAgenciaYDetalle(rs);
             }
 
             rs.close();
@@ -298,12 +294,12 @@ public class MuestraForenseDAOImpl extends AbstractDAO<MuestraForense> {
             motor.desconectar();
         }
 
-        return satelite;
+        return muestraForense;
     }
 
-    public List<Satelite> findActivosWithAgenciaAndDetalle() {
+    public List<MuestraForense> findActivosWithAgenciaAndDetalle() {
 
-        List<Satelite> satelites = new ArrayList<>();
+        List<MuestraForense> muestraForenses = new ArrayList<>();
 
         String sql = """
                 SELECT 
@@ -340,7 +336,7 @@ public class MuestraForenseDAOImpl extends AbstractDAO<MuestraForense> {
             ResultSet rs = ps.executeQuery();
 
             while (rs.next()) {
-                satelites.add(mapSateliteConAgenciaYDetalle(rs));
+                muestraForenses.add(mapSateliteConAgenciaYDetalle(rs));
             }
 
             rs.close();
@@ -353,26 +349,28 @@ public class MuestraForenseDAOImpl extends AbstractDAO<MuestraForense> {
             motor.desconectar();
         }
 
-        return satelites;
+        return muestraForenses;
     }
 
-    private Satelite mapSateliteConAgencia(ResultSet rs) throws SQLException {
+    private MuestraForense mapMuestraForenseConCentro(ResultSet rs) throws SQLException {
 
-        Agencia agencia = new Agencia();
-        agencia.setId(rs.getInt("agencia_id"));
-        agencia.setNombre(rs.getString("agencia_nombre"));
-        agencia.setPais(rs.getString("agencia_pais"));
+        CentroForense centroForense = new CentroForense();
+        InformeForense informeForense = new InformeForense();
 
-        Satelite satelite = new Satelite();
-        satelite.setId(rs.getInt("satelite_id"));
-        satelite.setNombre(rs.getString("satelite_nombre"));
-        satelite.setOrbita(rs.getString("orbita"));
-        satelite.setPeso(rs.getDouble("peso"));
-        satelite.setCoste(rs.getDouble("coste"));
-        satelite.setActivo(rs.getBoolean("activo"));
-        satelite.setAgencia(agencia);
+        centroForense.setId(rs.getInt("centroForense_id"));
+        centroForense.setNombre(rs.getString("centroForense_nombre"));
+        centroForense.setPais(rs.getString("centroForense_pais"));
 
-        return satelite;
+        MuestraForense muestraForense = new MuestraForense();
+        muestraForense.setId(rs.getInt("muestraForense_id"));
+        muestraForense.setCodigoCaso(rs.getInt("codigo_caso"));
+        muestraForense.setTipoMuestra(rs.getString("tipo_muestra"));
+        muestraForense.setFechaRecogida(rs.getInt("fecha_recogida"));
+        muestraForense.setEstadoCustodia(rs.getString("estado_custodia"));
+        muestraForense.setCentroForense(centroForense);
+        muestraForense.setInforme(informeForense);
+
+        return muestraForense;
     }
 
     private Satelite mapSateliteConAgenciaYDetalle(ResultSet rs) throws SQLException {
